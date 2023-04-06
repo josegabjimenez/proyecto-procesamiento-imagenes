@@ -1,0 +1,16 @@
+# .gitignore for Python virtual environment
+
+# Python virtual environment
+venv/
+*.pyc
+__pycache__/
+
+# Other
+*.log
+*.pot
+*.pyo
+*.swp
+*~
+.DS_Store
+.vscode
+
