@@ -4,10 +4,11 @@ import numpy as np # Operations
 import matplotlib.pyplot as plt # Plots
 
 st.title("Procesamiento Digital de Imágenes")
-# st.write("Escribe el nombre de la imagen a procesar")
+
+filenames = ["T1.nii", "IR.nii", "FLAIR.nii"]
 
 # Get image
-image_input = st.text_input("Ingresa el nombre de la imagen")
+image_input = st.selectbox("Selecciona una imagen", filenames)
 image_data = nib.load(f'./images/1/{image_input}.gz')
 image = image_data.get_fdata()
 
@@ -16,9 +17,9 @@ col1, col2, col3 = st.columns(3)
 
 # Add a numeric input field to each column
 with col1:
-    axisX = st.number_input("Eje X", value=0, step=1)
+    axisX = st.number_input("Eje X", value=-1, step=1)
 with col2:
-    axisY = st.number_input("Eje Y", value=0, step=1)
+    axisY = st.number_input("Eje Y", value=-1, step=1)
 with col3:
     axisZ = st.number_input("Eje Z", value=0, step=1)
 
@@ -58,7 +59,7 @@ def thresholding(image, tol = 1, tau = 20):
     return segmentation
 
 
-if selected_segmentation_option == 'Thresholding':
+if selected_segmentation_option == 'Thresholding' and segmentation_button_clicked:
     # Create the plot using imshow
     print("AXIS",axisX, axisY, axisZ)
     image_segmentated = thresholding(image)
@@ -75,4 +76,4 @@ elif selected_segmentation_option == 'Region Growing':
 else:
     st.write('You selected Option 3')
 
-print(image)
+# print(image)
