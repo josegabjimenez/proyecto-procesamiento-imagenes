@@ -23,11 +23,11 @@ if uploaded_file is not None:
         file_extension = ".nii"
 
     # Save the byte string to a temporary file with the correct extension
-    with open("temp_file" + file_extension, "wb") as f:
+    with open("./temp_images/temp_file" + file_extension, "wb") as f:
         f.write(file_contents)
 
     # Get the path of the temporary file
-    path = os.path.abspath("temp_file" + file_extension)
+    path = os.path.abspath("./temp_images/temp_file" + file_extension)
 
     # Load the NIfTI image using nibabel
     image_data = nib.load(path)
@@ -52,7 +52,6 @@ if uploaded_file is not None:
 
 
     with col2:
-        print(axis_shape)
         axis_value = st.slider(label="Posición", min_value=0, max_value=axis_shape, step=1, value=1)
         # axis_value = st.slider(label="Posición", 0, axis_shape, step=1 )
     
