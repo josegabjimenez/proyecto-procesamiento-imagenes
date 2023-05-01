@@ -4,14 +4,16 @@ import numpy as np
 def thresholding(image, tol = 1, tau = 20):
 
     while True:
-        # print(tau)
-
         segmentation = image >= tau
+        # Background
         mBG = image[np.multiply(image > 10, segmentation == 0)].mean()
+        # Foreground
         mFG = image[np.multiply(image > 10, segmentation == 1)].mean()
 
+        # Update tau
         tau_post = 0.5 * (mBG + mFG)
 
+        # Check if accepts the tolerance, if not, continue iterating
         if np.abs(tau - tau_post) < tol:
             break
         else:
@@ -20,24 +22,66 @@ def thresholding(image, tol = 1, tau = 20):
     return segmentation
 
 # Clustering - Kmeans
-def clustering(image, k = 3):
-    k1 = np.amin(image)
-    k2 = np.mean(image)
-    k3 = np.amax(image)
-    # print(k1, k2, k3)
-
-    for i in range(0,3):
-        d1 = np.abs(k1 - image)
-        d2 = np.abs(k2 - image)
-        d3 = np.abs(k3 - image)
-
-        segmentation = np.zeros_like(image)
-        segmentation[np.multiply(d1 < d2, d1 < d3)] = 0
-        segmentation[np.multiply(d2 < d1, d2 < d3)] = 1
-        segmentation[np.multiply(d3 < d1, d3 < d2)] = 2
-
-        k1 = image[segmentation == 0].mean()
-        k2 = image[segmentation == 1].mean()
-        k3 = image[segmentation == 2].mean()
+def clustering(image, k=3):
+    # Initialize the centroids
+    centroids = np.linspace(np.amin(image), np.amax(image), num=k)
     
+    for i in range(3):
+        # Compute the distances from each point to each centroid
+        distances = np.abs(image[..., np.newaxis] - centroids)
+        
+        # Assign each point to the closest centroid
+        segmentation = np.argmin(distances, axis=-1)
+        
+        # Update the centroids
+        for group in range(k):
+            centroids[group] = image[segmentation == group].mean()
+    
+    return segmentation
+
+
+
+# Region Growing
+def region_growing(image):
+    origin_x = 100
+    origin_y = 100
+    origin_z = 1
+    x = 1
+    y = 1
+    z = 1
+    valor_medio_cluster = image[origin_x, origin_y, 20]
+    tol = 50
+    segmentation = np.zeros_like(image)
+    itera = 1
+    point = [origin_x,origin_y]
+
+    tail = [point]
+    evaluated = image == True
+
+    while True:
+        punto = tail.pop(0)
+
+        print(len(tail))
+        
+        for dx in [-x, 0, x] :
+            for dy in [-y, 0, y] :
+                nuevoPunto = [punto[0]+dx, punto[1]+dy]
+                if((nuevoPunto[0] < 230) and ((nuevoPunto[0]) > 0) and (nuevoPunto[1] < 230) and ((nuevoPunto[1]) > 0) ):
+                    if (not evaluated[nuevoPunto[0], nuevoPunto[1],20]):
+                        if np.abs(valor_medio_cluster - image[nuevoPunto[0], nuevoPunto[1], 20]) < tol :
+                            segmentation[nuevoPunto[0], nuevoPunto[1], 20] = 1
+                            tail.append([nuevoPunto[0], nuevoPunto[1]])
+                            evaluated[nuevoPunto[0], nuevoPunto[1], 20] = True
+                            evaluated[punto[0], punto[1], 20] = True
+                        else :
+                            segmentation[nuevoPunto[0], nuevoPunto[1], 20] = 0
+                            tail.append([nuevoPunto[0], nuevoPunto[1]])
+                            evaluated[nuevoPunto[0], nuevoPunto[1], 20] = True
+                            evaluated[punto[0], punto[1], 20] = True
+
+
+        valor_medio_cluster = image[segmentation == 1].mean()
+
+        if len(tail) == 0:
+            break
     return segmentation
