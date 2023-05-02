@@ -57,7 +57,7 @@ if uploaded_file is not None:
 
 
     with col2:
-        axis_value = st.slider(label="Posición", min_value=0, max_value=axis_shape, step=1, value=1)
+        axis_value = st.slider(label="Posición", min_value=0, max_value=(axis_shape-1), step=1, value=1)
         # axis_value = st.slider(label="Posición", 0, axis_shape, step=1 )
     
     # Axis adjusment
