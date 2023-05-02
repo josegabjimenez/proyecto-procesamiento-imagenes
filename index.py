@@ -4,7 +4,7 @@ import numpy as np # Operations
 import matplotlib.pyplot as plt # Plots
 
 # Algorithms
-from algorithms.segmentation import thresholding, clustering
+from algorithms.segmentation import thresholding, region_growing, clustering
 
 
 import os
@@ -37,6 +37,8 @@ if uploaded_file is not None:
     # Load the NIfTI image using nibabel
     image_data = nib.load(path)
     image = image_data.get_fdata()
+
+    st.session_state["image"] = image
 
     # Create two columns for the axis inputs
     col1, col2 = st.columns(2)
@@ -85,6 +87,14 @@ if uploaded_file is not None:
 
     segmentation_options = ['Thresholding', 'Region Growing', 'Clustering']
     selected_segmentation_option = st.radio('Selecciona una técnica de segmentación', segmentation_options)
+    st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
+
+    if selected_segmentation_option == 'Thresholding':
+        tol = st.number_input("Selecciona una tolerancia::", 0, None, 1, 1)
+        tau = st.number_input("Selecciona un TAU:", 0, None, 20, 1)
+
+    if selected_segmentation_option == 'Clustering':
+        k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
 
     # Create segmentation button
     segmentation_button_clicked = st.button("Crear segmentación")
@@ -92,8 +102,10 @@ if uploaded_file is not None:
     # Algorithms
 
     if selected_segmentation_option == 'Thresholding' and segmentation_button_clicked:
+        print("TAU:", tau)
+        print("tol:", tol)
         # Create the plot using imshow
-        image_segmentated = thresholding(image)
+        image_segmentated = thresholding(image, tol, tau)
 
         # Plot image
         fig, ax = plt.subplots()
@@ -104,7 +116,7 @@ if uploaded_file is not None:
         
     elif selected_segmentation_option == 'Region Growing' and segmentation_button_clicked:
         # Create the plot using imshow
-        image_segmentated = clustering(image)
+        image_segmentated = region_growing(image)
 
         # Plot image
         fig, ax = plt.subplots()
@@ -115,7 +127,7 @@ if uploaded_file is not None:
 
     elif selected_segmentation_option == 'Clustering' and segmentation_button_clicked:
         # Create the plot using imshow
-        image_segmentated = clustering(image)
+        image_segmentated = clustering(image, k)
 
         # Plot image
         fig, ax = plt.subplots()
