@@ -11,34 +11,15 @@ import os
 
 st.title("Procesamiento Digital de Imágenes")
 
-# Create a file uploader widget
-uploaded_file = st.file_uploader("Selecciona una imagen")
+# # Create a file uploader widget
+# uploaded_file = st.file_uploader("Selecciona una imagen")
+
+image = st.session_state["image"]
 
 # If a file was uploaded
-if uploaded_file is not None:
-    # Get the contents of the file as a byte string
-    file_contents = uploaded_file.getvalue()
+if image is not None:
 
-    # # Set the file extension based on the uploaded file type
-    file_extension = os.path.splitext(uploaded_file.name)[1]
-
-    if (file_extension==".gz"):
-        file_extension = ".nii.gz"
-    else: 
-        file_extension = ".nii"
-
-    # Save the byte string to a temporary file with the correct extension
-    with open("./temp_images/temp_file" + file_extension, "wb") as f:
-        f.write(file_contents)
-
-    # Get the path of the temporary file
-    path = os.path.abspath("./temp_images/temp_file" + file_extension)
-
-    # Load the NIfTI image using nibabel
-    image_data = nib.load(path)
-    image = image_data.get_fdata()
-
-    st.session_state["image"] = image
+    st.markdown("## Visualización de la imagen")
 
     # Create two columns for the axis inputs
     col1, col2 = st.columns(2)
@@ -84,6 +65,9 @@ if uploaded_file is not None:
     fig, ax = plt.subplots()
     ax.imshow(image[axisX, axisY, axisZ])
     st.pyplot(fig)
+
+    # Segmentation
+    st.markdown("## Segmentación")
 
     segmentation_options = ['Thresholding', 'Region Growing', 'Clustering']
     selected_segmentation_option = st.radio('Selecciona una técnica de segmentación', segmentation_options)
