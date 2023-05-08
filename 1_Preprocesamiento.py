@@ -1,8 +1,11 @@
-import streamlit as st # To create interface
-import nibabel as nib # To read images
-import numpy as np # Operations
-import matplotlib.pyplot as plt # Plots
+import streamlit as st  # To create interface
+import nibabel as nib  # To read images
+import numpy as np  # Operations
+import matplotlib.pyplot as plt  # Plots
 import os
+
+# Standarization algorithms
+from algorithms.standarization import rescaling, z_score
 
 st.title("Preprocesamiento")
 
@@ -17,9 +20,9 @@ if uploaded_file is not None:
     # # Set the file extension based on the uploaded file type
     file_extension = os.path.splitext(uploaded_file.name)[1]
 
-    if (file_extension==".gz"):
+    if (file_extension == ".gz"):
         file_extension = ".nii.gz"
-    else: 
+    else:
         file_extension = ".nii"
 
     # Save the byte string to a temporary file with the correct extension
@@ -33,7 +36,7 @@ if uploaded_file is not None:
     image_data = nib.load(path)
     image = image_data.get_fdata()
 
-    st.session_state["image"] = image   
+    st.session_state["image"] = image
 
     # Image was uploaded
     st.markdown("## Visualización de la imagen")
@@ -55,11 +58,11 @@ if uploaded_file is not None:
         if axis_selected == "Eje Z":
             axis_shape = image.shape[2]
 
-
     with col2:
-        axis_value = st.slider(label="Posición", min_value=0, max_value=(axis_shape-1), step=1, value=1)
+        axis_value = st.slider(label="Posición", min_value=0, max_value=(
+            axis_shape-1), step=1, value=1)
         # axis_value = st.slider(label="Posición", 0, axis_shape, step=1 )
-    
+
     # Axis adjusment
     axisX = slice(None)
     axisY = slice(None)
@@ -80,5 +83,64 @@ if uploaded_file is not None:
 
     # Plot image
     fig, ax = plt.subplots()
+    ax.set_xlim([0, image.shape[0]])
+    ax.set_ylim([0, image.shape[1]])
     ax.imshow(image[axisX, axisY, axisZ])
     st.pyplot(fig)
+
+    # ------------------------------------------
+    # Standarization section
+    st.markdown("## Estandarización")
+
+    standarization_options = ['Rescaling', 'Z-score', 'White Stripe']
+    selected_standarization_option = st.radio(
+        'Selecciona una técnica de estandarización', standarization_options)
+    st.write(
+        '<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
+
+    if selected_standarization_option == 'WHite':
+        k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
+
+    # Create segmentation button
+    standardization_button_clicked = st.button("Generar estandarización")
+
+    # Algorithms
+
+    if selected_standarization_option == 'Rescaling' and standardization_button_clicked:
+        # Create the plot using imshow
+        image_standardized = rescaling(image)
+
+        # Set new image to state
+        st.session_state["image"] = image_standardized
+
+        # Plot image
+        fig, ax = plt.subplots()
+        ax.imshow(image_standardized[axisX, axisY, axisZ])
+
+        # Display the plot using Streamlit
+        st.pyplot(fig)
+
+    elif selected_standarization_option == 'Z-score' and standardization_button_clicked:
+        # Create the plot using imshow
+        image_standardized = z_score(image)
+
+        # Set new image to state
+        st.session_state["image"] = image_standardized
+
+        # Plot image
+        fig, ax = plt.subplots()
+        ax.imshow(image_standardized[axisX, axisY, axisZ])
+
+        # Display the plot using Streamlit
+        st.pyplot(fig)
+
+    # elif selected_standarization_option == 'Clustering' and standardization_button_clicked:
+    #     # Create the plot using imshow
+    #     image_segmentated = clustering(image, k)
+
+    #     # Plot image
+    #     fig, ax = plt.subplots()
+    #     ax.imshow(image_segmentated[axisX, axisY, axisZ])
+
+    #     # Display the plot using Streamlit
+    #     st.pyplot(fig)
