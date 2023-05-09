@@ -135,6 +135,8 @@ if image is not None:
 
         # Plot image
         fig, ax = plt.subplots()
+        ax.set_xlim([0, image.shape[0]])
+        ax.set_ylim([0, image.shape[1]])
         ax.imshow(image_segmentated[axisX, axisY, axisZ])
 
         # Display the plot using Streamlit
@@ -148,6 +150,8 @@ if image is not None:
 
         # Plot image
         fig, ax = plt.subplots()
+        ax.set_xlim([0, image.shape[0]])
+        ax.set_ylim([0, image.shape[1]])
         ax.imshow(image_segmentated[axisX, axisY, axisZ])
 
         # Display the plot using Streamlit
@@ -159,6 +163,8 @@ if image is not None:
 
         # Plot image
         fig, ax = plt.subplots()
+        ax.set_xlim([0, image.shape[0]])
+        ax.set_ylim([0, image.shape[1]])
         ax.imshow(image_segmentated[axisX, axisY, axisZ])
 
         # Display the plot using Streamlit
