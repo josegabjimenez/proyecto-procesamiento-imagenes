@@ -1,7 +1,7 @@
-import streamlit as st # To create interface
-import nibabel as nib # To read images
-import numpy as np # Operations
-import matplotlib.pyplot as plt # Plots
+import streamlit as st  # To create interface
+import nibabel as nib  # To read images
+import numpy as np  # Operations
+import matplotlib.pyplot as plt  # Plots
 
 # Algorithms
 from algorithms.segmentation import thresholding, region_growing, clustering
@@ -9,16 +9,26 @@ from algorithms.segmentation import thresholding, region_growing, clustering
 
 import os
 
-st.title("Procesamiento Digital de Imágenes")
+# Global Variables
+if "axisX" not in st.session_state:
+    st.session_state["axisX"] = slice(None)
 
-# # Create a file uploader widget
-# uploaded_file = st.file_uploader("Selecciona una imagen")
+if "axisY" not in st.session_state:
+    st.session_state["axisY"] = slice(None)
+
+if "axisZ" not in st.session_state:
+    st.session_state["axisZ"] = slice(None)
+
+if "image" not in st.session_state:
+    st.warning("No ha seleccionado una imagen")
+
+
+st.title("Procesamiento Digital de Imágenes")
 
 image = st.session_state["image"]
 
 # If a file was uploaded
 if image is not None:
-
     st.markdown("## Visualización de la imagen")
 
     # Create two columns for the axis inputs
@@ -27,57 +37,91 @@ if image is not None:
     # Add a dropdown to select an axis and a slider to select an index
     with col1:
         filenames = ["Eje X", "Eje Y", "Eje Z"]
-        axis_selected = st.selectbox("Selecciona un eje", filenames)
+
+        axis_selected = st.session_state.get("axis_selected", "Eje X")
+        axis_selected = st.selectbox(
+            "Selecciona un eje", filenames, index=filenames.index(axis_selected)
+        )
 
         if axis_selected == "Eje X":
             axis_shape = image.shape[0]
+            st.session_state["axis_selected"] = "Eje X"
+            default_value = st.session_state["axisX"]
 
         if axis_selected == "Eje Y":
             axis_shape = image.shape[1]
+            st.session_state["axis_selected"] = "Eje Y"
+            default_value = st.session_state["axisY"]
 
         if axis_selected == "Eje Z":
             axis_shape = image.shape[2]
-
+            st.session_state["axis_selected"] = "Eje Z"
+            default_value = st.session_state["axisZ"]
 
     with col2:
-        axis_value = st.slider(label="Posición", min_value=0, max_value=(axis_shape-1), step=1, value=1)
+        if type(default_value) != int:
+            default_value = 0
+
+        axis_value = st.slider(
+            label="Posición",
+            min_value=0,
+            max_value=(axis_shape - 1),
+            step=1,
+            value=default_value,
+        )
         # axis_value = st.slider(label="Posición", 0, axis_shape, step=1 )
-    
+
     # Axis adjusment
-    axisX = slice(None)
-    axisY = slice(None)
-    axisZ = slice(None)
+    axisX = st.session_state["axisX"]
+    axisY = st.session_state["axisY"]
+    axisZ = st.session_state["axisZ"]
 
     if axis_selected == "Eje X":
         axisX = axis_value
         axisY = slice(None)
         axisZ = slice(None)
+        st.session_state["axisX"] = axis_value
+        st.session_state["axisY"] = slice(None)
+        st.session_state["axisZ"] = slice(None)
     if axis_selected == "Eje Y":
         axisY = axis_value
         axisX = slice(None)
         axisZ = slice(None)
+        st.session_state["axisY"] = axis_value
+        st.session_state["axisX"] = slice(None)
+        st.session_state["axisZ"] = slice(None)
     if axis_selected == "Eje Z":
         axisZ = axis_value
         axisX = slice(None)
         axisY = slice(None)
+        st.session_state["axisZ"] = axis_value
+        st.session_state["axisX"] = slice(None)
+        st.session_state["axisY"] = slice(None)
 
     # Plot image
     fig, ax = plt.subplots()
+    ax.set_xlim([0, image.shape[0]])
+    ax.set_ylim([0, image.shape[1]])
     ax.imshow(image[axisX, axisY, axisZ])
     st.pyplot(fig)
 
     # Segmentation
     st.markdown("## Segmentación")
 
-    segmentation_options = ['Thresholding', 'Region Growing', 'Clustering']
-    selected_segmentation_option = st.radio('Selecciona una técnica de segmentación', segmentation_options)
-    st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
+    segmentation_options = ["Thresholding", "Region Growing", "Clustering"]
+    selected_segmentation_option = st.radio(
+        "Selecciona una técnica de segmentación", segmentation_options
+    )
+    st.write(
+        "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
+        unsafe_allow_html=True,
+    )
 
-    if selected_segmentation_option == 'Thresholding':
-        tol = st.number_input("Selecciona una tolerancia::", 0, None, 1, 1)
+    if selected_segmentation_option == "Thresholding":
+        tol = st.number_input("Selecciona una tolerancia:", 0.0, None, 1.0)
         tau = st.number_input("Selecciona un TAU:", 0, None, 20, 1)
 
-    if selected_segmentation_option == 'Clustering':
+    if selected_segmentation_option == "Clustering":
         k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
 
     # Create segmentation button
@@ -85,10 +129,8 @@ if image is not None:
 
     # Algorithms
 
-    if selected_segmentation_option == 'Thresholding' and segmentation_button_clicked:
-        print("TAU:", tau)
-        print("tol:", tol)
-        # Create the plot using imshow
+    if selected_segmentation_option == "Thresholding" and segmentation_button_clicked:
+        # Apply algorithm
         image_segmentated = thresholding(image, tol, tau)
 
         # Plot image
@@ -97,9 +139,11 @@ if image is not None:
 
         # Display the plot using Streamlit
         st.pyplot(fig)
-        
-    elif selected_segmentation_option == 'Region Growing' and segmentation_button_clicked:
-        # Create the plot using imshow
+
+    elif (
+        selected_segmentation_option == "Region Growing" and segmentation_button_clicked
+    ):
+        # Apply algorithm
         image_segmentated = region_growing(image)
 
         # Plot image
@@ -109,8 +153,8 @@ if image is not None:
         # Display the plot using Streamlit
         st.pyplot(fig)
 
-    elif selected_segmentation_option == 'Clustering' and segmentation_button_clicked:
-        # Create the plot using imshow
+    elif selected_segmentation_option == "Clustering" and segmentation_button_clicked:
+        # Apply algorithm
         image_segmentated = clustering(image, k)
 
         # Plot image
