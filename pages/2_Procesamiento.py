@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt  # Plots
 
 # Algorithms
 from algorithms.segmentation import thresholding, region_growing, clustering
+from algorithms.border_detection import finite_differences
 
 
 import os
@@ -21,6 +22,9 @@ if "axisZ" not in st.session_state:
 
 if "image" not in st.session_state:
     st.warning("No ha seleccionado una imagen")
+
+if "image_border_detected" not in st.session_state:
+    st.session_state["image_border_detected"] = None
 
 
 st.title("Procesamiento Digital de Imágenes")
@@ -105,7 +109,7 @@ if image is not None:
     ax.imshow(image[axisX, axisY, axisZ])
     st.pyplot(fig)
 
-    # Segmentation
+    # Segmentation --------------------------------------------------
     st.markdown("## Segmentación")
 
     segmentation_options = ["Thresholding", "Region Growing", "Clustering"]
@@ -170,4 +174,44 @@ if image is not None:
         # Display the plot using Streamlit
         st.pyplot(fig)
 
-    # print(image)
+    # ------------------------------------------
+    # Border detection section
+    st.markdown("## Detección de bordes")
+
+    border_detection_options = [
+        "Diferencias finitas",
+    ]
+    selected_border_detection_option = st.radio(
+        "Selecciona una técnica de detección de bordes", border_detection_options
+    )
+    st.write(
+        "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
+        unsafe_allow_html=True,
+    )
+
+    # Create border detection button
+    border_detection_button_clicked = st.button("Generar detección de bordes")
+
+    # Algorithms
+    if (
+        selected_border_detection_option == "Diferencias finitas"
+        and border_detection_button_clicked
+    ):
+        # Apply algorithm
+        image_border_detected = finite_differences(image)
+
+        # Set new image to state
+        # st.session_state["image"] = image_border_detected
+        st.session_state["image_border_detected"] = image_border_detected
+
+    # Plot Border detected image if exists
+    image_border_detected = st.session_state["image_border_detected"]
+    if image_border_detected is not None:
+        # Plot image
+        fig2, ax2 = plt.subplots()
+        ax2.set_xlim([0, image.shape[0]])
+        ax2.set_ylim([0, image.shape[1]])
+        ax2.imshow(image_border_detected[axisX, axisY, axisZ])
+
+        # Display the plot using Streamlit
+        st.pyplot(fig2)

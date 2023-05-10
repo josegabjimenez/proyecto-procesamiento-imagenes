@@ -8,13 +8,19 @@ import os
 from algorithms.standarization import rescaling, z_score, white_stripe
 
 # Denoise algorithms
-from algorithms.denoise import mean_filter, median_filter
+from algorithms.denoise import mean_filter, median_filter, edge_filter
 
 # Global variables
 
 # Axis adjusment
 if "image" not in st.session_state:
     st.session_state["image"] = None
+
+if "image_standardized" not in st.session_state:
+    st.session_state["image_standardized"] = None
+
+if "image_denoised" not in st.session_state:
+    st.session_state["image_denoised"] = None
 
 if "axis_selected" not in st.session_state:
     st.session_state["axis_selected"] = "Eje X"
@@ -60,6 +66,8 @@ if uploaded_file is not None:
     image = image_data.get_fdata()
 
     st.session_state["image"] = image
+    st.session_state["image_standardized"] = None
+    st.session_state["image_denoised"] = None
     st.session_state["axisX"] = slice(None)
     st.session_state["axisY"] = slice(None)
     st.session_state["axisZ"] = slice(None)
@@ -171,15 +179,7 @@ if image is not None:
 
         # Set new image to state
         st.session_state["image"] = image_standardized
-
-        # Plot image
-        fig1, ax1 = plt.subplots()
-        ax1.set_xlim([0, image.shape[0]])
-        ax1.set_ylim([0, image.shape[1]])
-        ax1.imshow(image_standardized[axisX, axisY, axisZ])
-
-        # Display the plot using Streamlit
-        st.pyplot(fig1)
+        st.session_state["image_standardized"] = image_standardized
 
     elif selected_standarization_option == "Z-score" and standardization_button_clicked:
         # Apply algorithm
@@ -187,15 +187,7 @@ if image is not None:
 
         # Set new image to state
         st.session_state["image"] = image_standardized
-
-        # Plot image
-        fig1, ax1 = plt.subplots()
-        ax1.set_xlim([0, image.shape[0]])
-        ax1.set_ylim([0, image.shape[1]])
-        ax1.imshow(image_standardized[axisX, axisY, axisZ])
-
-        # Display the plot using Streamlit
-        st.pyplot(fig1)
+        st.session_state["image_standardized"] = image_standardized
 
     elif (
         selected_standarization_option == "White Stripe"
@@ -206,15 +198,7 @@ if image is not None:
 
         # Set new image to state
         st.session_state["image"] = image_standardized
-
-        # Plot image
-        fig1, ax1 = plt.subplots()
-        ax1.set_xlim([0, image.shape[0]])
-        ax1.set_ylim([0, image.shape[1]])
-        ax1.imshow(image_standardized[axisX, axisY, axisZ])
-
-        # Display the plot using Streamlit
-        st.pyplot(fig1)
+        st.session_state["image_standardized"] = image_standardized
 
     elif (
         selected_standarization_option == "Histogram Matching"
@@ -225,8 +209,11 @@ if image is not None:
 
         # Set new image to state
         st.session_state["image"] = image_standardized
+        st.session_state["image_standardized"] = image_standardized
 
-        # Plot image
+    # Plot Standardized image if exists
+    image_standardized = st.session_state["image_standardized"]
+    if image_standardized is not None:
         fig1, ax1 = plt.subplots()
         ax1.set_xlim([0, image.shape[0]])
         ax1.set_ylim([0, image.shape[1]])
@@ -262,15 +249,7 @@ if image is not None:
 
         # Set new image to state
         st.session_state["image"] = image_denoised
-
-        # Plot image
-        fig2, ax2 = plt.subplots()
-        ax2.set_xlim([0, image.shape[0]])
-        ax2.set_ylim([0, image.shape[1]])
-        ax2.imshow(image_denoised[axisX, axisY, axisZ])
-
-        # Display the plot using Streamlit
-        st.pyplot(fig2)
+        st.session_state["image_denoised"] = image_denoised
 
     elif selected_denoise_option == "Median Filter" and denoise_button_clicked:
         # Apply algorithm
@@ -278,28 +257,24 @@ if image is not None:
 
         # Set new image to state
         st.session_state["image"] = image_denoised
+        st.session_state["image_denoised"] = image_denoised
 
+    elif selected_denoise_option == "Edge Filter" and denoise_button_clicked:
+        # Apply algorithm
+        image_denoised = edge_filter(image)
+
+        # Set new image to state
+        st.session_state["image"] = image_denoised
+        st.session_state["image_denoised"] = image_denoised
+
+    # Plot Denoised image if exists
+    image_denoised = st.session_state["image_denoised"]
+    if image_denoised is not None:
         # Plot image
         fig2, ax2 = plt.subplots()
         ax2.set_xlim([0, image.shape[0]])
         ax2.set_ylim([0, image.shape[1]])
         ax2.imshow(image_denoised[axisX, axisY, axisZ])
-
-        # Display the plot using Streamlit
-        st.pyplot(fig2)
-
-    elif selected_denoise_option == "Edge Filter" and denoise_button_clicked:
-        # Apply algorithm
-        image_standardized = white_stripe(image)
-
-        # Set new image to state
-        st.session_state["image"] = image_standardized
-
-        # Plot image
-        fig2, ax2 = plt.subplots()
-        ax2.set_xlim([0, image.shape[0]])
-        ax2.set_ylim([0, image.shape[1]])
-        ax2.imshow(image_standardized[axisX, axisY, axisZ])
 
         # Display the plot using Streamlit
         st.pyplot(fig2)

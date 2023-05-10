@@ -17,7 +17,11 @@ def z_score(image):
     mean_value = image[image > 10].mean()
     standard_deviation_value = image[image > 10].std()
 
-    image_rescaled = (image - mean_value) / (standard_deviation_value)
+    if np.std(image) == 0:
+        image_rescaled = image
+    else:
+        # image_standardized = (image - np.mean(image)) / np.std(image)
+        image_rescaled = (image - mean_value) / (standard_deviation_value)
 
     return image_rescaled
 
