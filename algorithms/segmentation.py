@@ -42,17 +42,16 @@ def clustering(image, k=3):
 
 
 # Region Growing
-def region_growing(image):
-    origin_x = 100
-    origin_y = 100
-    origin_z = 1
+def region_growing(image, origin_x = 100, origin_y = 100, origin_z = 20):
+    # origin_x = 100
+    # origin_y = 100
+    # origin_z = 1
     x = 1
     y = 1
     z = 1
-    valor_medio_cluster = image[origin_x, origin_y, 20]
+    valor_medio_cluster = image[origin_x, origin_y, origin_z]
     tol = 50
     segmentation = np.zeros_like(image)
-    itera = 1
     point = [origin_x,origin_y]
 
     tail = [point]
@@ -67,21 +66,74 @@ def region_growing(image):
             for dy in [-y, 0, y] :
                 nuevoPunto = [punto[0]+dx, punto[1]+dy]
                 if((nuevoPunto[0] < 230) and ((nuevoPunto[0]) > 0) and (nuevoPunto[1] < 230) and ((nuevoPunto[1]) > 0) ):
-                    if (not evaluated[nuevoPunto[0], nuevoPunto[1],20]):
-                        if np.abs(valor_medio_cluster - image[nuevoPunto[0], nuevoPunto[1], 20]) < tol :
-                            segmentation[nuevoPunto[0], nuevoPunto[1], 20] = 1
+                    if (not evaluated[nuevoPunto[0], nuevoPunto[1],origin_z]):
+                        if np.abs(valor_medio_cluster - image[nuevoPunto[0], nuevoPunto[1], origin_z]) < tol :
+                            segmentation[nuevoPunto[0], nuevoPunto[1], origin_z] = 1
                             tail.append([nuevoPunto[0], nuevoPunto[1]])
-                            evaluated[nuevoPunto[0], nuevoPunto[1], 20] = True
-                            evaluated[punto[0], punto[1], 20] = True
+                            evaluated[nuevoPunto[0], nuevoPunto[1], origin_z] = True
+                            evaluated[punto[0], punto[1], origin_z] = True
                         else :
-                            segmentation[nuevoPunto[0], nuevoPunto[1], 20] = 0
+                            segmentation[nuevoPunto[0], nuevoPunto[1], origin_z] = 0
                             tail.append([nuevoPunto[0], nuevoPunto[1]])
-                            evaluated[nuevoPunto[0], nuevoPunto[1], 20] = True
-                            evaluated[punto[0], punto[1], 20] = True
+                            evaluated[nuevoPunto[0], nuevoPunto[1], origin_z] = True
+                            evaluated[punto[0], punto[1], origin_z] = True
 
 
         valor_medio_cluster = image[segmentation == 1].mean()
 
         if len(tail) == 0:
             break
+    return segmentation
+
+
+
+def gaussian(x, mu, sigma):
+    """
+    Computes the probability density function of a Gaussian distribution.
+
+    :param x: Input data.
+    :param mu: Mean of the Gaussian distribution.
+    :param sigma: Standard deviation of the Gaussian distribution.
+    :return: Probability density function values for the input data.
+    """
+    return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / (sigma * np.sqrt(2 * np.pi))
+
+def gmm(image_data, k, num_iterations=100, threshold=0.01):
+    """
+    Segments an image into multiple classes using a Gaussian Mixture Model.
+
+    :param image_data: Input image data.
+    :param k: Number of classes to segment the image into.
+    :param num_iterations: Maximum number of iterations to run the algorithm for (default: 100).
+    :param threshold: Convergence threshold for the algorithm (default: 0.01).
+    :return: Segmented image data.
+    """
+    # Initialize parameters
+    num_voxels = np.prod(image_data.shape)
+    mu = np.linspace(image_data.min(), image_data.max(), k)
+    sigma = np.ones(k) * (image_data.max() - image_data.min()) / (2 * k)
+    p = np.ones(k) / k
+    q = np.zeros((num_voxels, k))
+
+    # Run the algorithm
+    for i in range(num_iterations):
+        # Calculate responsibilities
+        for k in range(k):
+            q[:, k] = p[k] * gaussian(image_data.flatten(), mu[k], sigma[k])
+        q = q / np.sum(q, axis=1)[:, np.newaxis]
+
+        # Update parameters
+        n = np.sum(q, axis=0)
+        p = n / num_voxels
+        mu = np.sum(q * image_data.flatten()[:, np.newaxis], axis=0) / n
+        sigma = np.sqrt(np.sum(q * (image_data.flatten()[:, np.newaxis] - mu) ** 2, axis=0) / n)
+
+        # Check for convergence
+        if np.max(np.abs(p - q.sum(axis=0) / num_voxels)) < threshold:
+            break
+
+    # Generate segmentation
+    segmentation = np.argmax(q, axis=1)
+    segmentation = segmentation.reshape(image_data.shape)
+
     return segmentation

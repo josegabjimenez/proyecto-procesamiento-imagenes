@@ -1,11 +1,18 @@
 from scipy.signal import find_peaks
 import numpy as np
+import nibabel as nib  # To read images
+import os
 
 
 # Rescaling standarization algorithm
 def rescaling(image):
-    min_value = image.min()
-    max_value = image.max()
+    # Get reference image to standardise original image
+    path = os.path.abspath("./images/1/FLAIR.nii.gz")
+    reference_image = nib.load(path).get_fdata()
+
+    # Get min and max value of reference image
+    min_value = reference_image.min()
+    max_value = reference_image.max()
 
     image_rescaled = (image - min_value) / (max_value - min_value)
 
@@ -14,8 +21,12 @@ def rescaling(image):
 
 # Z Score standardization algorithm
 def z_score(image):
-    mean_value = image[image > 10].mean()
-    standard_deviation_value = image[image > 10].std()
+    # Get reference image to standardise original image
+    path = os.path.abspath("./images/1/FLAIR.nii.gz")
+    reference_image = nib.load(path).get_fdata()
+
+    mean_value = reference_image[reference_image > 10].mean()
+    standard_deviation_value = reference_image[reference_image > 10].std()
 
     if np.std(image) == 0:
         image_rescaled = image
@@ -28,8 +39,12 @@ def z_score(image):
 
 # White stripe standardization algorithm
 def white_stripe(image):
+    # Get reference image to standardise original image
+    path = os.path.abspath("./images/1/FLAIR.nii.gz")
+    reference_image = nib.load(path).get_fdata()
+
     # Create histogram
-    hist, bin_edges = np.histogram(image.flatten(), bins=100)
+    hist, bin_edges = np.histogram(reference_image.flatten(), bins=100)
 
     # Find all the histogram peaks
     peaks, _ = find_peaks(hist, height=100)
@@ -40,8 +55,27 @@ def white_stripe(image):
 
     return image_rescaled
 
-    # # Mostrar el histograma con los picos identificados
-    # plt.axvline(peaks_values[1], color="r", linestyle="--")
-    # plt.hist(image.flatten(), bins=100)
-    # plt.plot(bin_edges[picos], hist[picos], "x")
-    # plt.show()
+def histogram_matching(image_data):
+    ## Load the original image data
+    data_orig = image_data
+    # Load the target image data
+    path = os.path.abspath("./images/1/FLAIR.nii.gz")
+    data_target = nib.load(path).get_fdata()
+
+    # Flatten the data arrays into 1D arrays
+    flat_orig = data_orig.flatten()
+    flat_target = data_target.flatten()
+
+    # Calculate the cumulative histograms for the original and target images
+    hist_orig, bins = np.histogram(flat_orig, bins=256, range=(0, 255), density=True)
+    hist_orig_cumulative = hist_orig.cumsum()
+    hist_target, _ = np.histogram(flat_target, bins=256, range=(0, 255), density=True)
+    hist_target_cumulative = hist_target.cumsum()
+
+    # Map the values of the original image to the values of the target image
+    lut = np.interp(hist_orig_cumulative, hist_target_cumulative, bins[:-1])
+
+    # Apply the mapping to the original image data
+    data_matched = np.interp(data_orig, bins[:-1], lut)
+
+    return data_matched

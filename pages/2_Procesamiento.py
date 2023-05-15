@@ -4,7 +4,7 @@ import numpy as np  # Operations
 import matplotlib.pyplot as plt  # Plots
 
 # Algorithms
-from algorithms.segmentation import thresholding, region_growing, clustering
+from algorithms.segmentation import thresholding, region_growing, clustering, gmm
 from algorithms.border_detection import finite_differences
 
 
@@ -112,7 +112,7 @@ if image is not None:
     # Segmentation --------------------------------------------------
     st.markdown("## Segmentación")
 
-    segmentation_options = ["Thresholding", "Region Growing", "Clustering"]
+    segmentation_options = ["Thresholding", "Region Growing", "Clustering", "GMM"]
     selected_segmentation_option = st.radio(
         "Selecciona una técnica de segmentación", segmentation_options
     )
@@ -125,7 +125,13 @@ if image is not None:
         tol = st.number_input("Selecciona una tolerancia:", 0.0, None, 1.0)
         tau = st.number_input("Selecciona un TAU:", 0, None, 20, 1)
 
-    if selected_segmentation_option == "Clustering":
+    if selected_segmentation_option == "Region Growing":
+        origin_x = st.number_input("Origin X:", 0, None, 100, 1)
+        origin_y = st.number_input("Origin Y:", 0, None, 100, 1)
+        origin_z = st.number_input("Origin Z:", 0, None, 20, 1)
+        
+
+    if selected_segmentation_option == "Clustering" or selected_segmentation_option == "GMM":
         k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
 
     # Create segmentation button
@@ -150,7 +156,7 @@ if image is not None:
         selected_segmentation_option == "Region Growing" and segmentation_button_clicked
     ):
         # Apply algorithm
-        image_segmentated = region_growing(image)
+        image_segmentated = region_growing(image, origin_x, origin_y, origin_z)
 
         # Plot image
         fig, ax = plt.subplots()
@@ -164,6 +170,19 @@ if image is not None:
     elif selected_segmentation_option == "Clustering" and segmentation_button_clicked:
         # Apply algorithm
         image_segmentated = clustering(image, k)
+
+        # Plot image
+        fig, ax = plt.subplots()
+        ax.set_xlim([0, image.shape[0]])
+        ax.set_ylim([0, image.shape[1]])
+        ax.imshow(image_segmentated[axisX, axisY, axisZ])
+
+        # Display the plot using Streamlit
+        st.pyplot(fig)
+
+    elif selected_segmentation_option == "GMM" and segmentation_button_clicked:
+        # Apply algorithm
+        image_segmentated = gmm(image, k)
 
         # Plot image
         fig, ax = plt.subplots()

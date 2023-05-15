@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt  # Plots
 import os
 
 # Standarization algorithms
-from algorithms.standarization import rescaling, z_score, white_stripe
+from algorithms.standarization import rescaling, z_score, white_stripe, histogram_matching
 
 # Denoise algorithms
 from algorithms.denoise import mean_filter, median_filter, edge_filter
@@ -66,8 +66,8 @@ if uploaded_file is not None:
     image = image_data.get_fdata()
 
     st.session_state["image"] = image
-    st.session_state["image_standardized"] = None
-    st.session_state["image_denoised"] = None
+    # st.session_state["image_standardized"] = None
+    # st.session_state["image_denoised"] = None
     st.session_state["axisX"] = slice(None)
     st.session_state["axisY"] = slice(None)
     st.session_state["axisZ"] = slice(None)
@@ -205,7 +205,7 @@ if image is not None:
         and standardization_button_clicked
     ):
         # Apply algorithm
-        image_standardized = white_stripe(image)
+        image_standardized = histogram_matching(image)
 
         # Set new image to state
         st.session_state["image"] = image_standardized
@@ -214,10 +214,17 @@ if image is not None:
     # Plot Standardized image if exists
     image_standardized = st.session_state["image_standardized"]
     if image_standardized is not None:
-        fig1, ax1 = plt.subplots()
+        fig1, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+
+        # Show image in the first subplot
         ax1.set_xlim([0, image.shape[0]])
         ax1.set_ylim([0, image.shape[1]])
         ax1.imshow(image_standardized[axisX, axisY, axisZ])
+        ax1.set_title('Imagen estandarizada')
+
+        # Show intensities histogram in the second subplot
+        ax2.hist(image_standardized.flatten(), bins=50)
+        ax2.set_title('Histograma de intensidades')
 
         # Display the plot using Streamlit
         st.pyplot(fig1)
@@ -268,13 +275,13 @@ if image is not None:
         st.session_state["image_denoised"] = image_denoised
 
     # Plot Denoised image if exists
-    image_denoised = st.session_state["image_denoised"]
-    if image_denoised is not None:
+    image_denoised_plot = st.session_state["image_denoised"]
+    if image_denoised_plot is not None:
         # Plot image
         fig2, ax2 = plt.subplots()
         ax2.set_xlim([0, image.shape[0]])
         ax2.set_ylim([0, image.shape[1]])
-        ax2.imshow(image_denoised[axisX, axisY, axisZ])
+        ax2.imshow(image_denoised_plot[axisX, axisY, axisZ])
 
         # Display the plot using Streamlit
         st.pyplot(fig2)
