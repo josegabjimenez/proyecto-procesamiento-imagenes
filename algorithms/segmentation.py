@@ -22,11 +22,26 @@ def thresholding(image, tol = 1, tau = 20):
     return segmentation
 
 # Clustering - Kmeans
-def clustering(image, k=3):
+
+def k_means(image, ks,iteracion):
+        
+    # Inicialización de valores k
+    k_values = np.linspace(np.amin(image), np.amax(image), ks)
+    iteracion=10
+    for i in range(iteracion):
+        d_values = [np.abs(k - image) for k in k_values]
+        segmentationr = np.argmin(d_values, axis=0)
+
+        for k_idx in range(ks):
+            k_values[k_idx] = np.mean(image[segmentationr == k_idx])
+
+    return segmentationr
+
+def clustering(image, k=3, iterations=3):
     # Initialize the centroids
     centroids = np.linspace(np.amin(image), np.amax(image), num=k)
     
-    for i in range(3):
+    for i in range(iterations):
         # Compute the distances from each point to each centroid
         distances = np.abs(image[..., np.newaxis] - centroids)
         
@@ -42,47 +57,27 @@ def clustering(image, k=3):
 
 
 # Region Growing
-def region_growing(image, origin_x = 100, origin_y = 100, origin_z = 20):
-    # origin_x = 100
-    # origin_y = 100
-    # origin_z = 1
-    x = 1
-    y = 1
-    z = 1
-    valor_medio_cluster = image[origin_x, origin_y, origin_z]
-    tol = 50
+def region_growing(image, x=100, y=100, z=20, tol=50):
     segmentation = np.zeros_like(image)
-    point = [origin_x,origin_y]
-
-    tail = [point]
-    evaluated = image == True
-
-    while True:
-        punto = tail.pop(0)
-
-        print(len(tail))
-        
-        for dx in [-x, 0, x] :
-            for dy in [-y, 0, y] :
-                nuevoPunto = [punto[0]+dx, punto[1]+dy]
-                if((nuevoPunto[0] < 230) and ((nuevoPunto[0]) > 0) and (nuevoPunto[1] < 230) and ((nuevoPunto[1]) > 0) ):
-                    if (not evaluated[nuevoPunto[0], nuevoPunto[1],origin_z]):
-                        if np.abs(valor_medio_cluster - image[nuevoPunto[0], nuevoPunto[1], origin_z]) < tol :
-                            segmentation[nuevoPunto[0], nuevoPunto[1], origin_z] = 1
-                            tail.append([nuevoPunto[0], nuevoPunto[1]])
-                            evaluated[nuevoPunto[0], nuevoPunto[1], origin_z] = True
-                            evaluated[punto[0], punto[1], origin_z] = True
-                        else :
-                            segmentation[nuevoPunto[0], nuevoPunto[1], origin_z] = 0
-                            tail.append([nuevoPunto[0], nuevoPunto[1]])
-                            evaluated[nuevoPunto[0], nuevoPunto[1], origin_z] = True
-                            evaluated[punto[0], punto[1], origin_z] = True
-
-
-        valor_medio_cluster = image[segmentation == 1].mean()
-
-        if len(tail) == 0:
-            break
+    if segmentation[x,y,z] == 1:
+        return
+    valor_medio_cluster = image[x,y,z]
+    segmentation[x,y,z] = 1
+    vecinos = [(x, y, z)]
+    while vecinos:
+        x, y, z = vecinos.pop()
+        for dx in [-1,0,1]:
+            for dy in [-1,0,1]:
+                for dz in [-1,0,1]:
+                    #vecino
+                    nx, ny, nz = x + dx, y + dy, z + dz
+                    if nx >= 0 and nx < image.shape[0] and \
+                        ny >= 0 and ny < image.shape[1] and \
+                        nz >= 0 and nz < image.shape[2]:
+                        if np.abs(valor_medio_cluster - image[nx,ny,nz]) < tol and \
+                            segmentation[nx,ny,nz] == 0:
+                            segmentation[nx,ny,nz] = 1
+                            vecinos.append((nx, ny, nz))
     return segmentation
 
 
@@ -135,5 +130,49 @@ def gmm(image_data, k, num_iterations=100, threshold=0.01):
     # Generate segmentation
     segmentation = np.argmax(q, axis=1)
     segmentation = segmentation.reshape(image_data.shape)
+
+    return segmentation
+
+
+def GMM(image):
+    # Each component has a weight (wi), a mean (mui), and a standard deviation (sdi)
+    w1 = 1/3
+    w2 = 1/3
+    w3 = 1/3
+    mu1 = 0
+    sd1 = 50
+    mu2 = 100
+    sd2 = 50
+    mu3 = 150
+    sd3 = 50
+
+    segmentation = np.zeros_like(image)
+    for iter in range(1, 5) :
+
+        # Compute likelihood of belonging to a cluster
+        p1 = 1/np.sqrt(2*np.pi*sd1**2) * np.exp(-0.5*np.power(image - mu1, 2) / sd1**2)
+        p2 = 1/np.sqrt(2*np.pi*sd2**2) * np.exp(-0.5*np.power(image - mu2, 2) / sd2**2)
+        p3 = 1/np.sqrt(2*np.pi*sd3**2) * np.exp(-0.5*np.power(image - mu3, 2) / sd3**2)
+
+        # Normalise probability
+        r1 = np.divide(w1 * p1, w1 * p1 + w2 * p2 + w3 * p3)
+        r2 = np.divide(w2 * p2, w1 * p1 + w2 * p2 + w3 * p3) 
+        r3 = np.divide(w3 * p3, w1 * p1 + w2 * p2 + w3 * p3) 
+
+        # Update parameters
+        w1 = r1.mean()
+        w2 = r2.mean()
+        w3 = r3.mean()
+        mu1 = np.multiply(r1, image).sum() / r1.sum()
+        sd1 = np.sqrt(np.multiply(r1, np.power(image - mu1, 2)).sum() / r1.sum())
+        mu2 = np.multiply(r2, image).sum() / r2.sum()
+        sd2 = np.sqrt(np.multiply(r2, np.power(image - mu2, 2)).sum() / r2.sum())
+        mu3 = np.multiply(r3, image).sum() / r3.sum()
+        sd3 = np.sqrt(np.multiply(r3, np.power(image - mu3, 2)).sum() / r3.sum())
+
+    # Perform segmentation
+    segmentation[np.multiply(r1 > r2, r1 > r3)] = 0
+    segmentation[np.multiply(r2 > r1, r2 > r3)] = 1
+    segmentation[np.multiply(r3 > r1, r3 > r2)] = 2
 
     return segmentation

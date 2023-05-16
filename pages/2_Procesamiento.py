@@ -4,7 +4,7 @@ import numpy as np  # Operations
 import matplotlib.pyplot as plt  # Plots
 
 # Algorithms
-from algorithms.segmentation import thresholding, region_growing, clustering, gmm
+from algorithms.segmentation import thresholding, region_growing, clustering, k_means, gmm, GMM
 from algorithms.border_detection import finite_differences
 
 
@@ -129,11 +129,14 @@ if image is not None:
         origin_x = st.number_input("Origin X:", 0, None, 100, 1)
         origin_y = st.number_input("Origin Y:", 0, None, 100, 1)
         origin_z = st.number_input("Origin Z:", 0, None, 20, 1)
-        
+        tol = st.number_input("Tolerancia:", 0, None, 50, 1)
 
-    if selected_segmentation_option == "Clustering" or selected_segmentation_option == "GMM":
+    if selected_segmentation_option == "Clustering":
         k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
+        iterations = st.number_input("Selecciona número de iteraciones", 0, None, 3, 1)
 
+    # if selected_segmentation_option == "GMM":
+    #     k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
     # Create segmentation button
     segmentation_button_clicked = st.button("Crear segmentación")
 
@@ -156,7 +159,7 @@ if image is not None:
         selected_segmentation_option == "Region Growing" and segmentation_button_clicked
     ):
         # Apply algorithm
-        image_segmentated = region_growing(image, origin_x, origin_y, origin_z)
+        image_segmentated = region_growing(image)
 
         # Plot image
         fig, ax = plt.subplots()
@@ -169,7 +172,8 @@ if image is not None:
 
     elif selected_segmentation_option == "Clustering" and segmentation_button_clicked:
         # Apply algorithm
-        image_segmentated = clustering(image, k)
+        # image_segmentated = clustering(image, k, iterations)
+        image_segmentated = k_means(image, k, iterations)
 
         # Plot image
         fig, ax = plt.subplots()
@@ -182,7 +186,8 @@ if image is not None:
 
     elif selected_segmentation_option == "GMM" and segmentation_button_clicked:
         # Apply algorithm
-        image_segmentated = gmm(image, k)
+        image_segmentated = GMM(image)
+        # image_segmentated = gmm(image, k)
 
         # Plot image
         fig, ax = plt.subplots()
