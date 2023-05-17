@@ -55,27 +55,47 @@ def white_stripe(image):
 
     return image_rescaled
 
-def histogram_matching(image_data):
-    ## Load the original image data
-    data_orig = image_data
-    # Load the target image data
+# def histogram_matching(image_data):
+#     ## Load the original image data
+#     data_orig = image_data
+#     # Load the target image data
+#     path = os.path.abspath("./images/1/FLAIR.nii.gz")
+#     data_target = nib.load(path).get_fdata()
+
+#     # Flatten the data arrays into 1D arrays
+#     flat_orig = data_orig.flatten()
+#     flat_target = data_target.flatten()
+
+#     # Calculate the cumulative histograms for the original and target images
+#     hist_orig, bins = np.histogram(flat_orig, bins=256, range=(0, 255), density=True)
+#     hist_orig_cumulative = hist_orig.cumsum()
+#     hist_target, _ = np.histogram(flat_target, bins=256, range=(0, 255), density=True)
+#     hist_target_cumulative = hist_target.cumsum()
+
+#     # Map the values of the original image to the values of the target image
+#     lut = np.interp(hist_orig_cumulative, hist_target_cumulative, bins[:-1])
+
+#     # Apply the mapping to the original image data
+#     data_matched = np.interp(data_orig, bins[:-1], lut)
+
+#     return data_matched
+
+
+def histogram_matching(transform_data,k=3):
     path = os.path.abspath("./images/1/FLAIR.nii.gz")
-    data_target = nib.load(path).get_fdata()
+    reference_data = nib.load(path).get_fdata()
 
-    # Flatten the data arrays into 1D arrays
-    flat_orig = data_orig.flatten()
-    flat_target = data_target.flatten()
+    # Reshape the data arrays to 1D arrays
+    reference_flat = reference_data.flatten()
+    transform_flat = transform_data.flatten()
 
-    # Calculate the cumulative histograms for the original and target images
-    hist_orig, bins = np.histogram(flat_orig, bins=256, range=(0, 255), density=True)
-    hist_orig_cumulative = hist_orig.cumsum()
-    hist_target, _ = np.histogram(flat_target, bins=256, range=(0, 255), density=True)
-    hist_target_cumulative = hist_target.cumsum()
 
-    # Map the values of the original image to the values of the target image
-    lut = np.interp(hist_orig_cumulative, hist_target_cumulative, bins[:-1])
+    reference_landmarks = np.percentile(reference_flat, np.linspace(0, 100, k))
+    transform_landmarks = np.percentile(transform_flat, np.linspace(0, 100, k))
 
-    # Apply the mapping to the original image data
-    data_matched = np.interp(data_orig, bins[:-1], lut)
+    piecewise_func = np.interp(transform_flat, transform_landmarks, reference_landmarks)
 
-    return data_matched
+
+    transformed_data = piecewise_func.reshape(transform_data.shape)
+
+    return transformed_data
