@@ -135,8 +135,9 @@ if image is not None:
         k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
         iterations = st.number_input("Selecciona número de iteraciones", 0, None, 3, 1)
 
-    # if selected_segmentation_option == "GMM":
-    #     k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
+    if selected_segmentation_option == "GMM":
+        k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
+        # iterations = st.number_input("Selecciona número de iteraciones", 0, None, 3, 1)
     # Create segmentation button
     segmentation_button_clicked = st.button("Crear segmentación")
 
@@ -150,7 +151,7 @@ if image is not None:
         fig, ax = plt.subplots()
         ax.set_xlim([0, image.shape[0]])
         ax.set_ylim([0, image.shape[1]])
-        ax.imshow(image_segmentated[axisX, axisY, axisZ])
+        ax.imshow(image_segmentated[axisX, axisY, axisZ], cmap="gray")
 
         # Display the plot using Streamlit
         st.pyplot(fig)
@@ -186,8 +187,8 @@ if image is not None:
 
     elif selected_segmentation_option == "GMM" and segmentation_button_clicked:
         # Apply algorithm
-        image_segmentated = GMM(image)
-        # image_segmentated = gmm(image, k)
+        # image_segmentated = GMM(image)
+        image_segmentated = gmm(image, k, iterations)
 
         # Plot image
         fig, ax = plt.subplots()
@@ -235,7 +236,7 @@ if image is not None:
         fig2, ax2 = plt.subplots()
         ax2.set_xlim([0, image.shape[0]])
         ax2.set_ylim([0, image.shape[1]])
-        ax2.imshow(image_border_detected[axisX, axisY, axisZ])
+        ax2.imshow(image_border_detected[axisX, axisY, axisZ], cmap="gray")
 
         # Display the plot using Streamlit
         st.pyplot(fig2)

@@ -148,7 +148,7 @@ if image is not None:
     fig, ax = plt.subplots()
     ax.set_xlim([0, image.shape[0]])
     ax.set_ylim([0, image.shape[1]])
-    ax.imshow(image[axisX, axisY, axisZ])
+    ax.imshow(image[axisX, axisY, axisZ], cmap="gray")
     st.pyplot(fig)
 
     # ------------------------------------------
@@ -219,7 +219,7 @@ if image is not None:
         # Show image in the first subplot
         ax1.set_xlim([0, image.shape[0]])
         ax1.set_ylim([0, image.shape[1]])
-        ax1.imshow(image_standardized[axisX, axisY, axisZ])
+        ax1.imshow(image_standardized[axisX, axisY, axisZ], cmap="gray")
         ax1.set_title('Imagen estandarizada')
 
         # Show intensities histogram in the second subplot
@@ -281,7 +281,7 @@ if image is not None:
         fig2, ax2 = plt.subplots()
         ax2.set_xlim([0, image.shape[0]])
         ax2.set_ylim([0, image.shape[1]])
-        ax2.imshow(image_denoised_plot[axisX, axisY, axisZ])
+        ax2.imshow(image_denoised_plot[axisX, axisY, axisZ], cmap="gray")
 
         # Display the plot using Streamlit
         st.pyplot(fig2)
