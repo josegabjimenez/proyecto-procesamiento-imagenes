@@ -38,13 +38,29 @@ def median_filter(image):
 
 
 # Median Filter with noise detection using finite differences (Edge filter)
-def edge_filter(image):
+def edge_filter(image, threshold=1):
     filtered_image = np.zeros_like(image)
 
-    # threshold = 500
+    # Update the threshold using ISODATA algorithm
+    while True:
+        # Separate pixels based on the current threshold
+        below_threshold = image[image < threshold]
+        above_threshold = image[image >= threshold]
+
+        # Calculate the new threshold as the average of below_threshold and above_threshold
+        new_threshold = (np.mean(below_threshold) + np.mean(above_threshold)) / 2
+
+        # Check if the threshold has converged
+        if np.abs(new_threshold - threshold) < 1:
+            break
+
+        # Update the threshold and continue the iteration
+        threshold = new_threshold
 
     # Estimate the standard deviation of the pixel intensity
-    std = np.std(image)
+    # std = np.std(image)
+
+    print(threshold)
 
     for x in range(1, image.shape[0] - 2):
         for y in range(1, image.shape[1] - 2):
@@ -58,7 +74,7 @@ def edge_filter(image):
                 magnitude = np.sqrt(dx * dx + dy * dy + dz * dz)
 
                 # Compute the threshold using a fraction of the standard deviation
-                threshold = 3 * std
+                # threshold = 3 * std
 
                 # If the magnitude is below the threshold, apply median filter
                 if magnitude < threshold:

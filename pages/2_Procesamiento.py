@@ -106,7 +106,7 @@ if image is not None:
     fig, ax = plt.subplots()
     ax.set_xlim([0, image.shape[0]])
     ax.set_ylim([0, image.shape[1]])
-    ax.imshow(image[axisX, axisY, axisZ])
+    ax.imshow(image[axisX, axisY, axisZ], cmap="gray")
     st.pyplot(fig)
 
     # Segmentation --------------------------------------------------
@@ -166,7 +166,7 @@ if image is not None:
         fig, ax = plt.subplots()
         ax.set_xlim([0, image.shape[0]])
         ax.set_ylim([0, image.shape[1]])
-        ax.imshow(image_segmentated[axisX, axisY, axisZ])
+        ax.imshow(image_segmentated[axisX, axisY, axisZ], cmap="gray")
 
         # Display the plot using Streamlit
         st.pyplot(fig)
@@ -180,7 +180,7 @@ if image is not None:
         fig, ax = plt.subplots()
         ax.set_xlim([0, image.shape[0]])
         ax.set_ylim([0, image.shape[1]])
-        ax.imshow(image_segmentated[axisX, axisY, axisZ])
+        ax.imshow(image_segmentated[axisX, axisY, axisZ], cmap="gray")
 
         # Display the plot using Streamlit
         st.pyplot(fig)
@@ -188,13 +188,13 @@ if image is not None:
     elif selected_segmentation_option == "GMM" and segmentation_button_clicked:
         # Apply algorithm
         # image_segmentated = GMM(image)
-        image_segmentated = gmm(image, k, iterations)
+        image_segmentated = gmm(image, k)
 
         # Plot image
         fig, ax = plt.subplots()
         ax.set_xlim([0, image.shape[0]])
         ax.set_ylim([0, image.shape[1]])
-        ax.imshow(image_segmentated[axisX, axisY, axisZ])
+        ax.imshow(image_segmentated[axisX, axisY, axisZ], cmap="gray")
 
         # Display the plot using Streamlit
         st.pyplot(fig)
@@ -240,3 +240,4 @@ if image is not None:
 
         # Display the plot using Streamlit
         st.pyplot(fig2)
+
