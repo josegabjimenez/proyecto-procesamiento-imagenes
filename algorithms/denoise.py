@@ -38,29 +38,8 @@ def median_filter(image):
 
 
 # Median Filter with noise detection using finite differences (Edge filter)
-def edge_filter(image, threshold=1):
+def edge_filter(image, tol=0.1, tau=0.5):
     filtered_image = np.zeros_like(image)
-
-    # Update the threshold using ISODATA algorithm
-    while True:
-        # Separate pixels based on the current threshold
-        below_threshold = image[image < threshold]
-        above_threshold = image[image >= threshold]
-
-        # Calculate the new threshold as the average of below_threshold and above_threshold
-        new_threshold = (np.mean(below_threshold) + np.mean(above_threshold)) / 2
-
-        # Check if the threshold has converged
-        if np.abs(new_threshold - threshold) < 1:
-            break
-
-        # Update the threshold and continue the iteration
-        threshold = new_threshold
-
-    # Estimate the standard deviation of the pixel intensity
-    # std = np.std(image)
-
-    print(threshold)
 
     for x in range(1, image.shape[0] - 2):
         for y in range(1, image.shape[1] - 2):
@@ -73,11 +52,41 @@ def edge_filter(image, threshold=1):
                 # Compute the magnitude of the gradient
                 magnitude = np.sqrt(dx * dx + dy * dy + dz * dz)
 
+                # Update the threshold using ISODATA algorithm
+                segmentation = image >= tau
+
+                # Background
+                mBG = image[segmentation == False]
+                if len(mBG) > 0:
+                    mBG = np.nan_to_num(mBG, nan=0)
+                    mBG = mBG.mean()
+                else:
+                    mBG = 0
+
+                # Foreground
+                mFG = image[segmentation]
+                if len(mFG) > 0:
+                    mFG = np.nan_to_num(mFG, nan=0)
+                    mFG = mFG.mean()
+                else:
+                    mFG = 0
+
+                # Update tau
+                tau_post = 0.5 * (mBG + mFG)
+
+                # Check if accepts the tolerance, if not, continue iterating
+                if np.abs(tau - tau_post) < tol:
+                    break
+                else:
+                    tau = tau_post
+
+                print(tol)
+
                 # Compute the threshold using a fraction of the standard deviation
                 # threshold = 3 * std
 
                 # If the magnitude is below the threshold, apply median filter
-                if magnitude < threshold:
+                if magnitude < tau:
                     neighbours = []
                     for dx in range(-1, 2):
                         for dy in range(-1, 2):

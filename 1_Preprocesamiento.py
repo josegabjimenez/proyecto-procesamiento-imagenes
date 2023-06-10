@@ -246,6 +246,9 @@ if image is not None:
         unsafe_allow_html=True,
     )
 
+    if selected_denoise_option == "Edge Filter":
+        tol = st.number_input("Tolerancia:", 0, None, 50, 1)
+
     # Create denoise button
     denoise_button_clicked = st.button("Generar reducción de ruido")
 
@@ -268,7 +271,7 @@ if image is not None:
 
     elif selected_denoise_option == "Edge Filter" and denoise_button_clicked:
         # Apply algorithm
-        image_denoised = edge_filter(image)
+        image_denoised = edge_filter(image, tol)
 
         # Set new image to state
         st.session_state["image"] = image_denoised

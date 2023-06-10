@@ -1,17 +1,25 @@
 import numpy as np
 
 # Thresholding - Umbralización
-def thresholding(image, tol = 1, tau = 20):
-
-    tau = tau/100
+def thresholding(image, tol=1, tau=20):
     while True:
-        
-
         segmentation = image >= tau
+
         # Background
-        mBG = image[np.multiply(image > 0.001, segmentation == 0)].mean()
+        mBG = image[segmentation == False]
+        if len(mBG) > 0:
+            mBG = np.nan_to_num(mBG, nan=0)
+            mBG = mBG.mean()
+        else:
+            mBG = 0
+
         # Foreground
-        mFG = image[np.multiply(image > 0.001, segmentation == 1)].mean()
+        mFG = image[segmentation]
+        if len(mFG) > 0:
+            mFG = np.nan_to_num(mFG, nan=0)
+            mFG = mFG.mean()
+        else:
+            mFG = 0
 
         # Update tau
         tau_post = 0.5 * (mBG + mFG)

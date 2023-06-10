@@ -123,7 +123,7 @@ if image is not None:
 
     if selected_segmentation_option == "Thresholding":
         tol = st.number_input("Selecciona una tolerancia:", 0.0, None, 1.0)
-        tau = st.number_input("Selecciona un TAU:", 0, None, 20, 1)
+        tau = st.number_input("Selecciona un TAU:", 0.0, None, 20.0, 1.0)
 
     if selected_segmentation_option == "Region Growing":
         origin_x = st.number_input("Origin X:", 0, None, 100, 1)
@@ -194,7 +194,7 @@ if image is not None:
         fig, ax = plt.subplots()
         ax.set_xlim([0, image.shape[0]])
         ax.set_ylim([0, image.shape[1]])
-        ax.imshow(image_segmentated[axisX, axisY, axisZ], cmap="gray")
+        ax.imshow(image_segmentated[axisX, axisY, axisZ])
 
         # Display the plot using Streamlit
         st.pyplot(fig)
