@@ -247,7 +247,7 @@ if image is not None:
     )
 
     if selected_denoise_option == "Edge Filter":
-        tol = st.number_input("Tolerancia:", 0, None, 50, 1)
+        tol = st.number_input("Tolerancia:", 0.0, None, 50.0, 1.0)
 
     # Create denoise button
     denoise_button_clicked = st.button("Generar reducción de ruido")

@@ -76,11 +76,11 @@ def edge_filter(image, tol=0.1, tau=0.5):
 
                 # Check if accepts the tolerance, if not, continue iterating
                 if np.abs(tau - tau_post) < tol:
-                    break
+                    tau = tau
                 else:
                     tau = tau_post
 
-                print(tol)
+                # print(tol)
 
                 # Compute the threshold using a fraction of the standard deviation
                 # threshold = 3 * std
