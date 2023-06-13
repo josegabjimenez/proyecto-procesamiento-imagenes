@@ -20,19 +20,17 @@ if "axisY" not in st.session_state:
 if "axisZ" not in st.session_state:
     st.session_state["axisZ"] = slice(None)
 
-if "image" not in st.session_state:
+if "images" not in st.session_state:
     st.warning("No ha seleccionado una imagen")
-
-if "image_border_detected" not in st.session_state:
-    st.session_state["image_border_detected"] = None
 
 
 st.title("Procesamiento Digital de Imágenes")
 
-image = st.session_state["image"]
+images = st.session_state["images"]
+selected_image_index = st.session_state["selected_image_index"]
 
 # If a file was uploaded
-if image is not None:
+if images != []:
     st.markdown("## Visualización de la imagen")
 
     # Create two columns for the axis inputs
@@ -48,17 +46,17 @@ if image is not None:
         )
 
         if axis_selected == "Eje X":
-            axis_shape = image.shape[0]
+            axis_shape = images[selected_image_index].shape[0]
             st.session_state["axis_selected"] = "Eje X"
             default_value = st.session_state["axisX"]
 
         if axis_selected == "Eje Y":
-            axis_shape = image.shape[1]
+            axis_shape = images[selected_image_index].shape[1]
             st.session_state["axis_selected"] = "Eje Y"
             default_value = st.session_state["axisY"]
 
         if axis_selected == "Eje Z":
-            axis_shape = image.shape[2]
+            axis_shape = images[selected_image_index].shape[2]
             st.session_state["axis_selected"] = "Eje Z"
             default_value = st.session_state["axisZ"]
 
@@ -104,9 +102,9 @@ if image is not None:
 
     # Plot image
     fig, ax = plt.subplots()
-    ax.set_xlim([0, image.shape[0]])
-    ax.set_ylim([0, image.shape[1]])
-    ax.imshow(image[axisX, axisY, axisZ], cmap="gray")
+    ax.set_xlim([0, images[selected_image_index].shape[0]])
+    ax.set_ylim([0, images[selected_image_index].shape[1]])
+    ax.imshow(images[selected_image_index][axisX, axisY, axisZ], cmap="gray")
     st.pyplot(fig)
 
     # Segmentation --------------------------------------------------
@@ -145,59 +143,52 @@ if image is not None:
 
     if selected_segmentation_option == "Thresholding" and segmentation_button_clicked:
         # Apply algorithm
-        image_segmentated = thresholding(image, tol, tau)
+        image_segmentated = thresholding(images[selected_image_index], tol, tau)
 
-        # Plot image
-        fig, ax = plt.subplots()
-        ax.set_xlim([0, image.shape[0]])
-        ax.set_ylim([0, image.shape[1]])
-        ax.imshow(image_segmentated[axisX, axisY, axisZ], cmap="gray")
-
-        # Display the plot using Streamlit
-        st.pyplot(fig)
+        # Set new image to state
+        st.session_state["images"][selected_image_index] = image_segmentated
+        st.session_state["image_segmented"][selected_image_index] = image_segmentated
 
     elif (
         selected_segmentation_option == "Region Growing" and segmentation_button_clicked
     ):
         # Apply algorithm
-        image_segmentated = region_growing(image)
+        image_segmentated = region_growing(images[selected_image_index])
 
-        # Plot image
-        fig, ax = plt.subplots()
-        ax.set_xlim([0, image.shape[0]])
-        ax.set_ylim([0, image.shape[1]])
-        ax.imshow(image_segmentated[axisX, axisY, axisZ], cmap="gray")
-
-        # Display the plot using Streamlit
-        st.pyplot(fig)
+        # Set new image to state
+        st.session_state["images"][selected_image_index] = image_segmentated
+        st.session_state["image_segmented"][selected_image_index] = image_segmentated
 
     elif selected_segmentation_option == "Clustering" and segmentation_button_clicked:
         # Apply algorithm
         # image_segmentated = clustering(image, k, iterations)
-        image_segmentated = k_means(image, k, iterations)
+        image_segmentated = k_means(images[selected_image_index], k, iterations)
 
-        # Plot image
-        fig, ax = plt.subplots()
-        ax.set_xlim([0, image.shape[0]])
-        ax.set_ylim([0, image.shape[1]])
-        ax.imshow(image_segmentated[axisX, axisY, axisZ], cmap="gray")
-
-        # Display the plot using Streamlit
-        st.pyplot(fig)
+        # Set new image to state
+        st.session_state["images"][selected_image_index] = image_segmentated
+        st.session_state["image_segmented"][selected_image_index] = image_segmentated
 
     elif selected_segmentation_option == "GMM" and segmentation_button_clicked:
         # Apply algorithm
         # image_segmentated = GMM(image)
-        image_segmentated = gmm(image, k)
+        image_segmentated = gmm(images[selected_image_index], k)
 
+        # Set new image to state
+        st.session_state["images"][selected_image_index] = image_segmentated
+        st.session_state["image_segmented"][selected_image_index] = image_segmentated
+
+
+    # Plot segmented image if exists
+    image_segmented = st.session_state["image_segmented"][selected_image_index]
+    if image_segmented is not None:
         # Plot image
-        fig, ax = plt.subplots()
-        ax.set_xlim([0, image.shape[0]])
-        ax.set_ylim([0, image.shape[1]])
-        ax.imshow(image_segmentated[axisX, axisY, axisZ])
+        fig1, ax1 = plt.subplots()
+        ax1.set_xlim([0, images[selected_image_index].shape[0]])
+        ax1.set_ylim([0, images[selected_image_index].shape[1]])
+        ax1.imshow(image_segmented[axisX, axisY, axisZ], cmap="gray")
 
         # Display the plot using Streamlit
-        st.pyplot(fig)
+        st.pyplot(fig1)
 
     # ------------------------------------------
     # Border detection section
@@ -223,19 +214,19 @@ if image is not None:
         and border_detection_button_clicked
     ):
         # Apply algorithm
-        image_border_detected = finite_differences(image)
+        image_border_detected = finite_differences(images[selected_image_index])
 
         # Set new image to state
         # st.session_state["image"] = image_border_detected
-        st.session_state["image_border_detected"] = image_border_detected
+        st.session_state["image_border_detected"][selected_image_index] = image_border_detected
 
     # Plot Border detected image if exists
-    image_border_detected = st.session_state["image_border_detected"]
+    image_border_detected = st.session_state["image_border_detected"][selected_image_index]
     if image_border_detected is not None:
         # Plot image
         fig2, ax2 = plt.subplots()
-        ax2.set_xlim([0, image.shape[0]])
-        ax2.set_ylim([0, image.shape[1]])
+        ax2.set_xlim([0, images[selected_image_index].shape[0]])
+        ax2.set_ylim([0, images[selected_image_index].shape[1]])
         ax2.imshow(image_border_detected[axisX, axisY, axisZ], cmap="gray")
 
         # Display the plot using Streamlit
