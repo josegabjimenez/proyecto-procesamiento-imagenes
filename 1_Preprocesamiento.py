@@ -11,7 +11,7 @@ from algorithms.standarization import rescaling, z_score, white_stripe, histogra
 from algorithms.denoise import mean_filter, median_filter, edge_filter
 
 # Registration algorithms
-from algorithms.registration import registration
+from algorithms.registration import registration, save_image
 
 # Global variables
 
@@ -41,7 +41,7 @@ if "selected_image_index" not in st.session_state:
     st.session_state["selected_image_index"] = 0
 
 if "axis_selected" not in st.session_state:
-    st.session_state["axis_selected"] = "Eje X"
+    st.session_state["axis_selected"] = "Eje Z"
 
 if "axisX" not in st.session_state:
     st.session_state["axisX"] = slice(None)
@@ -116,10 +116,12 @@ if uploaded_file != []:
 
             st.session_state["image_standardized"][i] = None
             st.session_state["image_denoised"][i] = None
+            st.session_state["image_segmented"][i] = None
+            st.session_state["image_registered"][i] = None
             st.session_state["axisX"] = slice(None)
             st.session_state["axisY"] = slice(None)
             st.session_state["axisZ"] = slice(None)
-            st.session_state["axis_selected"] = "Eje X"
+            st.session_state["axis_selected"] = "Eje Z"
 
             #update images
             images = st.session_state["images"]
@@ -277,6 +279,8 @@ if images != []:
         ax2.hist(image_standardized.flatten(), bins=50)
         ax2.set_title('Histograma de intensidades')
 
+        save_image(image_standardized, uploaded_file[selected_image_index].name)
+
         # Display the plot using Streamlit
         st.pyplot(fig1)
 
@@ -337,6 +341,8 @@ if images != []:
         ax2.set_ylim([0, images[selected_image_index].shape[1]])
         ax2.imshow(image_denoised_plot[axisX, axisY, axisZ], cmap="gray")
 
+        save_image(image_denoised_plot, uploaded_file[selected_image_index].name)
+
         # Display the plot using Streamlit
         st.pyplot(fig2)
 
@@ -346,11 +352,11 @@ if images != []:
     st.markdown("## Registro de imágenes")
 
     # Create two columns for the axis inputs
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     # Add a dropdown to select an axis and a slider to select an index
     with col1:
-
+        # Select fixed image for registration
         fixed_image_selected = st.selectbox(
             "Selecciona la imagen fija", options=image_options.keys(), format_func=lambda x: image_options[x].split(".")[0], index=0
         )
@@ -358,8 +364,20 @@ if images != []:
 
 
     with col2:
+        # Select moving image for registration
         moving_image_selected = st.selectbox(
             "Selecciona la imagen móvil", options=image_options.keys(), format_func=lambda x: image_options[x].split(".")[0], index=0
+        )
+
+    with col3:
+
+        # Select segmented image as mask for resgistration if exists
+        image_segmented = st.session_state["image_segmented"]
+        segmented_images_options = {
+            i: image_segmented[i]["name"] for i in range(0, len(image_segmented)) if image_segmented[i] != None
+        }
+        segmentation_image_selected = st.selectbox(
+            "Selecciona la imagen segmentada", options=segmented_images_options.keys(), format_func=lambda x: segmented_images_options[x].split(".")[0], index=0
         )
     
     # Create registration button
@@ -368,7 +386,8 @@ if images != []:
     # Algorithms
     if registration_button_clicked:
         # Apply algorithm
-        image_registered = registration(images[fixed_image_selected], images[moving_image_selected])
+        uploaded_files = st.session_state["uploaded_files"]
+        image_registered = registration(uploaded_files[fixed_image_selected].name, uploaded_files[moving_image_selected].name, image_segmented[segmentation_image_selected]["name"])
 
         # Set new image to state
         st.session_state["images"][selected_image_index] = image_registered
