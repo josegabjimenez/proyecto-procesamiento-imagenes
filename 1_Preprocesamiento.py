@@ -390,7 +390,7 @@ if images != []:
         image_registered = registration(uploaded_files[fixed_image_selected].name, uploaded_files[moving_image_selected].name, image_segmented[segmentation_image_selected]["name"])
 
         # Set new image to state
-        st.session_state["images"][selected_image_index] = image_registered
+        # st.session_state["images"][selected_image_index] = image_registered
         st.session_state["image_registered"][selected_image_index] = image_registered
     
     # Plot Registered image if exists
@@ -402,5 +402,8 @@ if images != []:
         ax3.set_ylim([0, images[selected_image_index].shape[1]])
         ax3.imshow(image_registered_plot[axisX, axisY, axisZ], cmap="gray")
 
+        save_image(image_registered_plot, "registered_"+uploaded_file[selected_image_index].name, uploaded_file[selected_image_index].name)
+
+        
         # Display the plot using Streamlit
         st.pyplot(fig3)
