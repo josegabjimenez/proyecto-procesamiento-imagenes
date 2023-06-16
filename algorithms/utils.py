@@ -116,10 +116,11 @@ def remove_brain():
         os.path.join("temp_images", "FLAIR_original_sin_craneo.nii.gz")
     ).get_fdata()
 
-    image_data_flair_segmented = k_means(image_data_flair_without_skull, 6, 15)
+    image_data_flair_segmented = k_means(image_data_flair_without_skull, 15, 15)
 
     # Where the values are 3, replace them in the image_data with a value of 3
-    image_data = np.where(image_data_flair_segmented == 3, 3, image_data)
+    image_data_flair_segmented[:,:,:13] = 0
+    image_data = np.where(image_data_flair_segmented == 7, 3, image_data)
 
     affine = image.affine
     # Create a nibabel image object from the image data
