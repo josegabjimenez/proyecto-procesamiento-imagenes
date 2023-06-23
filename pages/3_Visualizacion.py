@@ -122,15 +122,18 @@ if images != []:
 
     # Read the .nii image file
     with open(
-        os.path.join("temp_images", uploaded_file[selected_image_index].name), "rb"
+        # os.path.join("temp_images", uploaded_file[selected_image_index].name), "rb"
+        os.path.join("temp_images", "FLAIR_skull_lesion.nii.gz"),
+        "rb",
     ) as file:
         nii_data = file.read()
 
     # Set the Streamlit download button
     st.download_button(
-        label="Download NIfTI Image",
+        label="Download Segmentation Image",
         data=nii_data,
-        file_name=uploaded_file[selected_image_index].name,
+        # file_name=uploaded_file[selected_image_index].name,
+        file_name="FLAIR_skull_lesion.nii.gz",
     )
 
     # Remove brain
