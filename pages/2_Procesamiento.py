@@ -6,12 +6,18 @@ import io
 
 
 # Algorithms
-from algorithms.segmentation import thresholding, region_growing, clustering, k_means, gmm, GMM
+from algorithms.segmentation import (
+    thresholding,
+    region_growing,
+    clustering,
+    k_means,
+    gmm,
+    GMM,
+)
 from algorithms.border_detection import finite_differences
 from algorithms.registration import save_image
 
 # from streamlit.uploaded_file_manager import UploadedFile
-
 
 
 import os
@@ -38,13 +44,14 @@ uploaded_file = st.session_state["uploaded_files"]
 
 # If a file was uploaded
 if images != []:
-
     # Select image to use
-    image_options = {
-        i: uploaded_file[i].name for i in range(0, len(uploaded_file))
-    }
+    image_options = {i: uploaded_file[i].name for i in range(0, len(uploaded_file))}
     selected_image_index = st.radio(
-        "Selecciona la imagen que vas a usar", options=image_options.keys(), horizontal=True, format_func=lambda x: image_options[x].split(".")[0], index=st.session_state["selected_image_index"]
+        "Selecciona la imagen que vas a usar",
+        options=image_options.keys(),
+        horizontal=True,
+        format_func=lambda x: image_options[x].split(".")[0],
+        index=st.session_state["selected_image_index"],
     )
     st.session_state["selected_image_index"] = selected_image_index
     st.write(selected_image_index)
@@ -73,7 +80,7 @@ if images != []:
 
     if selected_segmentation_option == "Clustering":
         k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
-        iterations = st.number_input("Selecciona número de iteraciones", 0, None, 3, 1)
+        iterations = st.number_input("Selecciona número de iteraciones", 0, None, 15, 1)
 
     if selected_segmentation_option == "GMM":
         k = st.number_input("Selecciona número de grupos", 0, None, 3, 1)
@@ -89,7 +96,10 @@ if images != []:
 
         # Set new image to state
         # st.session_state["images"][selected_image_index] = image_segmentated
-        st.session_state["image_segmented"][selected_image_index] = {"name": "segmented_"+uploaded_file[selected_image_index].name, "image": image_segmentated}
+        st.session_state["image_segmented"][selected_image_index] = {
+            "name": "segmented_" + uploaded_file[selected_image_index].name,
+            "image": image_segmentated,
+        }
 
     elif (
         selected_segmentation_option == "Region Growing" and segmentation_button_clicked
@@ -99,7 +109,10 @@ if images != []:
 
         # Set new image to state
         # st.session_state["images"][selected_image_index] = image_segmentated
-        st.session_state["image_segmented"][selected_image_index] = {"name": "segmented_"+ uploaded_file[selected_image_index].name, "image": image_segmentated}
+        st.session_state["image_segmented"][selected_image_index] = {
+            "name": "segmented_" + uploaded_file[selected_image_index].name,
+            "image": image_segmentated,
+        }
 
     elif selected_segmentation_option == "Clustering" and segmentation_button_clicked:
         # Apply algorithm
@@ -108,7 +121,10 @@ if images != []:
 
         # Set new image to state
         # st.session_state["images"][selected_image_index] = image_segmentated
-        st.session_state["image_segmented"][selected_image_index] = {"name": "segmented_"+uploaded_file[selected_image_index].name, "image": image_segmentated}
+        st.session_state["image_segmented"][selected_image_index] = {
+            "name": "segmented_" + uploaded_file[selected_image_index].name,
+            "image": image_segmentated,
+        }
 
     elif selected_segmentation_option == "GMM" and segmentation_button_clicked:
         # Apply algorithm
@@ -117,8 +133,10 @@ if images != []:
 
         # Set new image to state
         # st.session_state["images"][selected_image_index] = image_segmentated
-        st.session_state["image_segmented"][selected_image_index] = {"name": "segmented_"+uploaded_file[selected_image_index].name, "image": image_segmentated}
-
+        st.session_state["image_segmented"][selected_image_index] = {
+            "name": "segmented_" + uploaded_file[selected_image_index].name,
+            "image": image_segmentated,
+        }
 
     # Plot segmented image if exists
     image_segmented = st.session_state["image_segmented"][selected_image_index]
@@ -201,9 +219,11 @@ if images != []:
         st.pyplot(fig)
 
         # Save segmented image to temp files
-        save_image(image_segmented, "segmented_"+uploaded_file[selected_image_index].name, uploaded_file[selected_image_index].name)
-
-
+        save_image(
+            image_segmented,
+            "segmented_" + uploaded_file[selected_image_index].name,
+            uploaded_file[selected_image_index].name,
+        )
 
     # ------------------------------------------
     # Border detection section
@@ -233,10 +253,14 @@ if images != []:
 
         # Set new image to state
         # st.session_state["image"] = image_border_detected
-        st.session_state["image_border_detected"][selected_image_index] = image_border_detected
+        st.session_state["image_border_detected"][
+            selected_image_index
+        ] = image_border_detected
 
     # Plot Border detected image if exists
-    image_border_detected = st.session_state["image_border_detected"][selected_image_index]
+    image_border_detected = st.session_state["image_border_detected"][
+        selected_image_index
+    ]
     if image_border_detected is not None:
         # Plot image
         fig2, ax2 = plt.subplots()
@@ -248,4 +272,3 @@ if images != []:
 
         # Display the plot using Streamlit
         st.pyplot(fig2)
-

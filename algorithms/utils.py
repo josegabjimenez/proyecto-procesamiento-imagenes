@@ -8,7 +8,7 @@ import os
 from algorithms.segmentation import k_means
 
 
-def remove_brain():
+def remove_brain(lession_label=2):
     # Cargar la imagen NIfTI
 
     nifti_img = nib.load(
@@ -66,7 +66,9 @@ def remove_brain():
     data_mascara = sitk.GetArrayFromImage(mascara_referencia)
 
     # Crear una máscara booleana para los valores cero dentro del cerebro
-    mascara_cero_cerebro = (data_sin_craneo == 0) & (data_mascara != 0)
+    mascara_cero_cerebro = (
+        (data_sin_craneo >= 0) & (data_sin_craneo < 0.1) & (data_mascara != 0)
+    )
 
     # Asignar un valor distinto a los valores cero dentro del cerebro
     valor_distinto = 4
@@ -83,11 +85,13 @@ def remove_brain():
     )
 
     # ----------------------------------------------------------------------------------
-    # Quitar cráneo a FLAIR Original
+    # Quitar cráneo a FLAIR Segmentada
     # ----------------------------------------------------------------------------------
     # Cargar las imágenes
 
-    imagen_original = sitk.ReadImage(os.path.join("temp_images", "FLAIR.nii.gz"))
+    imagen_original = sitk.ReadImage(
+        os.path.join("temp_images", "segmented_FLAIR.nii.gz")
+    )
     imagen_referencia = sitk.ReadImage(os.path.join("temp_images", "IR_skull.nii.gz"))
 
     # Realizar segmentación basada en umbral adaptativo
@@ -103,25 +107,50 @@ def remove_brain():
 
     sitk.WriteImage(
         imagen_sin_craneo,
-        os.path.join("temp_images", "FLAIR_original_sin_craneo.nii.gz"),
+        os.path.join("temp_images", "segmented_FLAIR_without_skull.nii.gz"),
     )
 
     # ----------------------------------------------------------------------------------
-    # Segmentar lesiones
+    # Unir FLAIR Segmentada sin cráneo para segmentar lesiones
     # ----------------------------------------------------------------------------------
 
+    # FLAIR sin cráneo y segmentada pero sin lesiones
     image = nib.load(os.path.join("temp_images", "FLAIR_skull.nii.gz"))
     image_data = image.get_fdata()
-    image_data_flair_without_skull = nib.load(
-        os.path.join("temp_images", "FLAIR_original_sin_craneo.nii.gz")
+
+    # FLAIR sin cráneo y segmentada pero con lesiones
+    image_data_flair_segmented = nib.load(
+        os.path.join("temp_images", "segmented_FLAIR_without_skull.nii.gz")
     ).get_fdata()
 
-    image_data_flair_segmented = k_means(image_data_flair_without_skull, 15, 15)
+    # image_data_flair_segmented = k_means(image_data_flair_without_skull, 3, 15)
 
     # Where the values are 3, replace them in the image_data with a value of 3
-    image_data_flair_segmented[:,:,:13] = 0
-    image_data = np.where(image_data_flair_segmented == 7, 3, image_data)
+    image_data_flair_segmented[:, :, :13] = 0
+    image_data_flair_segmented[:, :, 40:] = 0
+    image_data = np.where(image_data_flair_segmented == lession_label, 3, image_data)
 
+    # Cambiar los labels para que queden acorde a la segmentación de Jose Bernal
+    bg = image_data == 0
+    grey_matter = np.logical_and(image_data > 0.95, image_data <= 1.5)
+    white_matter = np.logical_and(image_data > 1.5, image_data <= 2.5)
+    lessons = np.logical_and(image_data > 2.5, image_data <= 3.5)
+    cfr_liquid = np.logical_or(
+        np.logical_and(image_data > 3.5, image_data <= 4.5),
+        np.logical_and(image_data > 0.05, image_data <= 0.95),
+    )
+
+    image_data[bg] = 0
+    image_data[cfr_liquid] = 1
+    image_data[grey_matter] = 2
+    image_data[white_matter] = 3
+    image_data[lessons] = 4
+
+    # Ajustar un poco las segmentaciones para mejorar el volumen (A los primeros planos eliminar segmentación y así reducir error de cráneo)
+    image_data[:, :, :3] = 0
+    image_data[:, :, 43:] = 0
+
+    # Guardar la imagen sin el cráneo y con las lesiones segmentadas
     affine = image.affine
     # Create a nibabel image object from the image data
     image = nib.Nifti1Image(image_data.astype(np.float32), affine=affine)
