@@ -10,6 +10,8 @@ def rescaling(image):
     path = os.path.abspath("./images/1/FLAIR.nii.gz")
     reference_image = nib.load(path).get_fdata()
 
+    reference_image = image
+
     # Get min and max value of reference image
     min_value = reference_image.min()
     max_value = reference_image.max()
@@ -24,6 +26,8 @@ def z_score(image):
     # Get reference image to standardise original image
     path = os.path.abspath("./images/1/FLAIR.nii.gz")
     reference_image = nib.load(path).get_fdata()
+
+    # reference_image = image
 
     mean_value = reference_image[reference_image > 10].mean()
     standard_deviation_value = reference_image[reference_image > 10].std()
@@ -40,8 +44,10 @@ def z_score(image):
 # White stripe standardization algorithm
 def white_stripe(image):
     # Get reference image to standardise original image
-    path = os.path.abspath("./images/1/FLAIR.nii.gz")
-    reference_image = nib.load(path).get_fdata()
+    # path = os.path.abspath("./images/1/FLAIR.nii.gz")
+    # reference_image = nib.load(path).get_fdata()
+
+    reference_image = image
 
     # Create histogram
     hist, bin_edges = np.histogram(reference_image.flatten(), bins=100)
@@ -54,6 +60,7 @@ def white_stripe(image):
     image_rescaled = image / peaks_values[1]
 
     return image_rescaled
+
 
 # def histogram_matching(image_data):
 #     ## Load the original image data
@@ -81,7 +88,7 @@ def white_stripe(image):
 #     return data_matched
 
 
-def histogram_matching(transform_data,k=3):
+def histogram_matching(transform_data, k=3):
     path = os.path.abspath("./images/1/FLAIR.nii.gz")
     reference_data = nib.load(path).get_fdata()
 
@@ -89,12 +96,10 @@ def histogram_matching(transform_data,k=3):
     reference_flat = reference_data.flatten()
     transform_flat = transform_data.flatten()
 
-
     reference_landmarks = np.percentile(reference_flat, np.linspace(0, 100, k))
     transform_landmarks = np.percentile(transform_flat, np.linspace(0, 100, k))
 
     piecewise_func = np.interp(transform_flat, transform_landmarks, reference_landmarks)
-
 
     transformed_data = piecewise_func.reshape(transform_data.shape)
 
